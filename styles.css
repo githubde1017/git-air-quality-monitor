@@ -1,0 +1,31 @@
+body { margin: 0; padding: 0; display: flex; }
+#map { height: 100vh; width: 70%; }
+#dashboard { padding: 20px; width: 30%; height: 100vh; background: #f8f8f8; position: relative; overflow-y: auto; }
+.filter-controls { margin-bottom: 10px; }
+.load-controls { margin-top: 10px; }
+.load-controls button { margin-right: 10px; }
+#station-info { max-height: 70vh; overflow-y: auto; margin-top: 10px; background: #fff; padding: 10px; border-radius: 5px; }
+.error-message { color: red; }
+#chart-container { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 1px solid #ccc; border-radius: 8px; padding: 20px; z-index: 1000; }
+#chart-close { cursor: pointer; color: red; float: right; }
+.legend { background: white; padding: 5px; border-radius: 5px; position: absolute; bottom: 10px; left: 10px; z-index: 1000; max-width: 150px; }
+.legend h4 { font-size: 14px; margin: 0; }
+.legend div { font-size: 12px; }
+#legend-toggle { cursor: pointer; color: blue; text-decoration: underline; }
+#map {
+    position: relative; /* 確保子元素可以相對於此元素定位 */
+    height: 100vh; 
+    width: 70%; 
+}
+
+.current-time {
+    position: absolute;
+    top: 10px;
+    left: 70px;
+    font-size: 18px;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 5px;
+    border-radius: 5px;
+    z-index: 1000; /* 確保在地圖之上 */
+}

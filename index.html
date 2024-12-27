@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>空氣品質監測地圖</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div id="current-time" class="current-time"></div>
+<div id="map"></div>
+<div id="dashboard">
+    <div class="filter-controls">
+        <label for="city-select">選擇縣市:</label>
+        <select id="city-select">
+            <option value="所有">所有</option>
+            <option value="臺北市">臺北市</option>
+            <option value="新北市">新北市</option>
+            <option value="桃園市">桃園市</option>
+            <option value="臺中市">臺中市</option>
+            <option value="高雄市">高雄市</option>
+        </select>
+        <button id="locate-btn">定位</button>
+    </div>
+    <div class="filter-controls">
+        <label for="quality-select">選擇空氣品質等級:</label>
+        <select id="quality-select">
+            <option value="所有">所有</option>
+            <option value="良好">良好</option>
+            <option value="普通">普通</option>
+            <option value="不良">不良</option>
+            <option value="非常不良">非常不良</option>
+            <option value="危害">危害</option>
+        </select>
+    </div>
+    
+    <div class="load-controls">
+        <button id="load-more">手動加載資料</button>
+        <button id="auto-load">自動加載資料</button>
+        <button id="show-chart">顯示統計圖表</button>
+    </div>
+
+    <div id="station-info"></div>
+    <div id="error-message" class="error-message"></div>
+
+    <div id="chart-container">
+        <div id="chart-close">✖</div>
+        <canvas id="station-chart" width="400" height="200"></canvas>
+    </div>
+</div>
+
+<div class="legend" id="legend-container">
+    <h4>PM2.5 空品健康等級 <span id="legend-toggle">(隱藏)</span></h4>
+    <div style="color: green;">良好 (0 - 35 µg/m³)</div>
+    <div style="color: yellow;">普通 (36 - 75 µg/m³)</div>
+    <div style="color: orange;">不良 (76 - 150 µg/m³)</div>
+    <div style="color: red;">非常不良 (151 - 250 µg/m³)</div>
+    <div style="color: purple;">危害 (251 µg/m³ 以上)</div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="scripts.js"></script>
+</body>
+</html>
