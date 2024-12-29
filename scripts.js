@@ -29,6 +29,7 @@ let currentPage = 0;
 const pageSize = 2000;
 let allData = [];
 let autoLoadInterval;
+let stationIDFilter = ''; // 儲存測站 ID 篩選
 
 const airQualityDataURL = 'https://sta.colife.org.tw/STA_AirQuality_EPAIoT/v1.0/Datastreams?$select=name,description&$expand=Thing($select=name,properties/stationID,properties/city),Thing/Locations($select=location/coordinates),Observations($orderby=phenomenonTime%20desc;$top=1;$select=phenomenonTime,result)&$filter=name%20eq%20%27PM2.5%27&$count=true';
 
@@ -82,16 +83,16 @@ async function updateMap() {
     });
     document.getElementById('station-info').innerHTML = '';
 
-    let stationCount = 0;
-
     allData.forEach(item => {
         const coordinates = item.Thing.Locations[0].location.coordinates;
         const pm25Value = item.Observations[0]?.result || 0;
         const airQualityLevel = getAirQualityLevel(pm25Value);
         const cityName = item.Thing.properties.city || "未知";
 
+        // 檢查篩選條件
         if ((selectedCity === '所有' || cityName === selectedCity) && 
-            (selectedQuality === '所有' || airQualityLevel === selectedQuality)) {
+            (selectedQuality === '所有' || airQualityLevel === selectedQuality) &&
+            (stationIDFilter === '' || item.Thing.properties.stationID.includes(stationIDFilter))) { // 這裡檢查 stationIDFilter
             
             const marker = L.circleMarker([coordinates[1], coordinates[0]], {
                 radius: 8,
@@ -106,8 +107,6 @@ async function updateMap() {
             const stationInfo = document.createElement('div');
             stationInfo.innerHTML = `<b>${item.Thing.name}</b> (${cityName}): PM2.5: ${pm25Value} µg/m³, 空氣品質: ${airQualityLevel}`;
             document.getElementById('station-info').appendChild(stationInfo);
-
-            stationCount++;
         }
     });
 
@@ -193,6 +192,14 @@ document.getElementById('quality-select').addEventListener('change', (event) => 
     updateMap();
 });
 
+// 新增測站 ID 輸入監聽器
+document.getElementById('station-id').addEventListener('input', (event) => {
+    stationIDFilter = event.target.value.trim(); // 更新測站 ID 篩選
+    currentPage = 0; // 重置當前頁面
+    allData = []; // 清空數據
+    updateMap(); // 更新地圖
+});
+
 document.getElementById('load-more').addEventListener('click', () => {
     currentPage++;
     updateMap();
@@ -267,4 +274,4 @@ async function fetchCityFromCoordinates(lat, lon) {
     }
 }
 
-updateMap();
+updateMap();  // 初始載入地圖

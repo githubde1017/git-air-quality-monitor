@@ -29,3 +29,10 @@ body { margin: 0; padding: 0; display: flex; }
     border-radius: 5px;
     z-index: 1000; /* 確保在地圖之上 */
 }
+
+.county-border {
+    color: blue; /* 高亮邊界顏色 */
+    weight: 2; /* 邊界寬度 */
+}
+
+/* 調整其他樣式... */

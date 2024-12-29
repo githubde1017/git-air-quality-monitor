@@ -13,16 +13,20 @@
 <div id="current-time" class="current-time"></div>
 <div id="map"></div>
 <div id="dashboard">
+    <h1><p><strong>TW IoT PM2.5</strong></p></h1>
+    <h2><p><strong>**注意事項說明**</strong></p></h2>
+    <p><b>§官方微型感測器資料，部分縣市的感測器定義為"未知"。</b></p>
+    <p><b>§測站ID可篩選特定測站編號輸入數字。</b></p>
     <div class="filter-controls">
         <label for="city-select">選擇縣市:</label>
         <select id="city-select">
             <option value="所有">所有</option>
             <option value="基隆市">基隆市</option>
-            <option value="臺北市">台北市</option>
+            <option value="台北市">臺北市</option>
             <option value="新北市">新北市</option>
             <option value="桃園市">桃園市</option>
             <option value="臺中市">臺中市</option>
-            <option value="臺南市">台南市</option>
+            <option value="臺南市">臺南市</option>
             <option value="高雄市">高雄市</option>
             <option value="宜蘭縣">宜蘭縣</option>
             <option value="新竹縣">新竹縣</option>
@@ -38,8 +42,13 @@
             <option value="澎湖縣">澎湖縣</option>
             <option value="金門縣">金門縣</option>
             <option value="連江縣">連江縣</option>
+            <option value="未知">未知</option>
         </select>
         <button id="locate-btn">定位</button>
+    </div>
+    <div class="filter-controls">
+        <label for="station-id">輸入測站ID:</label>
+        <input type="text" id="station-id" placeholder="測站ID">
     </div>
     <div class="filter-controls">
         <label for="quality-select">選擇空氣品質等級:</label>
