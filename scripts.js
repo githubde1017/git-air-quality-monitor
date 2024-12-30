@@ -1,3 +1,93 @@
+window.onload = function() {
+    showModal(); // 自動顯示模態窗口
+};
+
+function showModal() {
+    const modal = document.getElementById('modal');
+    modal.style.display = "block"; // 顯示模態窗口
+}
+
+document.querySelector('.close').onclick = function() {
+    const modal = document.getElementById('modal');
+    modal.style.display = "none"; // 關閉模態窗口
+};
+
+
+function updateCountdown() {
+    const targetDate = new Date("2025-01-01T00:00:00");
+    const now = new Date();
+    const timeDifference = targetDate - now;
+
+    if (timeDifference < 0) {
+        // 倒數結束時顯示煙火和更改標題
+        showFireworks();
+        changeTitle();
+        return;
+    }
+
+    const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+
+    const countdownText = `${days}天 ${hours}小時 ${minutes}分鐘 ${seconds}秒`;
+    document.getElementById('countdown').innerText = countdownText;
+}
+
+function changeTitle() {
+    const titleElement = document.getElementById('countdown-title');
+    titleElement.innerText = "Happy New Year 2025!";
+    titleElement.style.color = "#FFD700"; // 設置顏色為金色
+    titleElement.style.transition = "transform 0.5s"; // 添加過渡效果
+    titleElement.style.transform = "scale(1.5)"; // 放大效果
+
+    // 恢復到原始大小
+    setTimeout(() => {
+        titleElement.style.transform = "scale(1)";
+    }, 1000);
+}
+
+function showFireworks() {
+    const fireworksContainer = document.getElementById('fireworks');
+    fireworksContainer.style.display = 'block';
+
+    // 使用 Canvas API 繪製煙火效果
+    const canvas = document.createElement('canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    fireworksContainer.appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+
+    // 煙火效果的基本邏輯
+    function drawFireworks() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // 繪製煙火效果（可根據需要自定義）
+        ctx.fillStyle = 'rgba(255, 87, 51, 1)';
+        ctx.beginPath();
+        ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 50, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // 每 500 毫秒繪製一次煙火
+    const interval = setInterval(() => {
+        drawFireworks();
+    }, 500);
+
+    // 5 秒後停止煙火效果
+    setTimeout(() => {
+        clearInterval(interval);
+        fireworksContainer.style.display = 'none'; // 隱藏煙火
+    }, 43200);
+}
+
+// 每秒更新倒數時間
+setInterval(updateCountdown, 1000);
+updateCountdown();  // 初始顯示
+
+// 每秒更新倒數時間
+setInterval(updateCountdown, 1000);
+updateCountdown();  // 初始顯示
+
 function updateTime() {
     const now = new Date();
     const options = { 
