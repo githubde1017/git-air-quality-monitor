@@ -9,7 +9,7 @@ function showModal() {
     // 3秒後自動關閉模態窗口
     setTimeout(() => {
         modal.style.display = "none"; // 關閉模態窗口
-    }, 3000);
+    }, 5000);
 }
 
 document.querySelector('.close').onclick = function() {
