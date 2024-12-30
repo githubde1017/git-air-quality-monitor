@@ -79,8 +79,28 @@ body { margin: 0; padding: 0; display: flex; }
     height: auto; /* 自動高度 */
     max-width: 80%; /* 最大寬度 */
     max-height: 80%; /* 最大高度 */
-    overflow: auto; /* 需要時滾動 */
     background-color: white; /* 背景顏色 */
     border-radius: 10px; /* 圓角 */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 陰影 */
+    overflow: hidden; /* 隱藏溢出部分 */
+}
+
+.modal-content {
+    display: block;
+    max-width: 100%; /* 圖片最大寬度為 100% */
+    max-height: 100%; /* 圖片最大高度為 100% */
+    width: 100%; /* 圖片寬度 100% */
+    height: auto; /* 高度自動 */
+    object-fit: contain; /* 讓圖片按比例縮放 */
+    margin: auto; /* 自動調整外邊距以居中 */
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    color: #fff;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
 }
