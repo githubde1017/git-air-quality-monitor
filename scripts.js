@@ -5,6 +5,11 @@ window.onload = function() {
 function showModal() {
     const modal = document.getElementById('modal');
     modal.style.display = "block"; // 顯示模態窗口
+
+    // 3秒後自動關閉模態窗口
+    setTimeout(() => {
+        modal.style.display = "none"; // 關閉模態窗口
+    }, 3000);
 }
 
 document.querySelector('.close').onclick = function() {
