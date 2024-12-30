@@ -72,27 +72,15 @@ body { margin: 0; padding: 0; display: flex; }
     display: none; /* 隱藏模態窗口 */
     position: fixed; /* 固定在視口 */
     z-index: 1000; /* 確保在其他元素之上 */
-    left: 0;
-    top: 0;
-    width: 100%; /* 全屏 */
-    height: 100%;
+    left: 50%; /* 左側 50% */
+    top: 50%; /* 上側 50% */
+    transform: translate(-50%, -50%); /* 向左和向上移動 50% */
+    width: auto; /* 自動寬度 */
+    height: auto; /* 自動高度 */
+    max-width: 80%; /* 最大寬度 */
+    max-height: 80%; /* 最大高度 */
     overflow: auto; /* 需要時滾動 */
-    background-color: rgba(0, 0, 0, 0.8); /* 半透明背景 */
-}
-
-.modal-content {
-    margin: auto;
-    display: block;
-    max-width: 80%;
-    max-height: 80%;
-}
-
-.close {
-    position: absolute;
-    top: 15px;
-    right: 35px;
-    color: #fff;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
+    background-color: white; /* 背景顏色 */
+    border-radius: 10px; /* 圓角 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 陰影 */
 }
