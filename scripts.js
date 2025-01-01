@@ -291,7 +291,7 @@ async function fetchCityFromCoordinates(lat, lon) {
 updateMap();  // 初始載入地圖
 
 let fireworksActive = false;
-const MAX_PARTICLES = 90; // 最大粒子數量
+const MAX_PARTICLES = 50; // 最大粒子數量
 const MAX_SECONDARY_PARTICLES = 20; // 最大二次爆炸粒子數量
 const colors = ['#FF3333', '#FF9933', '#FFFF33', '#33FF33', '#33FFFF', '#3333FF', '#9933FF']; // 可用顏色
 
