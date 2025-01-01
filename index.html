@@ -10,12 +10,12 @@
 </head>
 <body>
 
-<div id="modal" class="modal">
-    <span class="close">&times;</span>
-    <img class="modal-content" id="modal-image" src="HappyNewYear2025.png" alt="Happy New Year 2025">
-</div>
-<div id="countdown-title" class="countdown-title">迎接2025年倒數</div>
-<div id="countdown" class="countdown"></div>
+    <div id="modal" class="modal">
+        <button class="close">&times;</button> <!-- 使用按鈕元素 -->
+        <canvas id="fireworks-canvas"></canvas>
+        <div id="happy-new-year" class="happy-new-year">HAPPY NEW YEAR 2025</div>
+    </div>
+    
 <div id="fireworks" class="fireworks" style="display: none;"></div>
 <div id="current-time" class="current-time"></div>
 <div id="map"></div>
@@ -24,7 +24,7 @@
     <p><strong>**注意事項說明**</strong></p>
     <p><b>§官方微型感測器資料，部分縣市的定義為"未知"。</b></p>
     <p><b>§測站ID可篩選特定測站編號輸入數字。</b></p>
-    <button onclick="showModal()">HappyNewYear</button>
+    <button class="blink-button" onclick="showModal()">Happy New Year</button>
     <div class="filter-controls">
         <label for="city-select">選擇縣市:</label>
         <select id="city-select">

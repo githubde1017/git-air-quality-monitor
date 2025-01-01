@@ -5,93 +5,12 @@ window.onload = function() {
 function showModal() {
     const modal = document.getElementById('modal');
     modal.style.display = "block"; // 顯示模態窗口
-
-    // 3秒後自動關閉模態窗口
-    setTimeout(() => {
-        modal.style.display = "none"; // 關閉模態窗口
-    }, 5000);
 }
 
 document.querySelector('.close').onclick = function() {
     const modal = document.getElementById('modal');
     modal.style.display = "none"; // 關閉模態窗口
 };
-
-
-function updateCountdown() {
-    const targetDate = new Date("2025-01-01T00:00:00");
-    const now = new Date();
-    const timeDifference = targetDate - now;
-
-    if (timeDifference < 0) {
-        // 倒數結束時顯示煙火和更改標題
-        showFireworks();
-        changeTitle();
-        return;
-    }
-
-    const days = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((timeDifference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
-
-    const countdownText = `${days}天 ${hours}小時 ${minutes}分鐘 ${seconds}秒`;
-    document.getElementById('countdown').innerText = countdownText;
-}
-
-function changeTitle() {
-    const titleElement = document.getElementById('countdown-title');
-    titleElement.innerText = "Happy New Year 2025!";
-    titleElement.style.color = "#FFD700"; // 設置顏色為金色
-    titleElement.style.transition = "transform 0.5s"; // 添加過渡效果
-    titleElement.style.transform = "scale(1.5)"; // 放大效果
-
-    // 恢復到原始大小
-    setTimeout(() => {
-        titleElement.style.transform = "scale(1)";
-    }, 1000);
-}
-
-function showFireworks() {
-    const fireworksContainer = document.getElementById('fireworks');
-    fireworksContainer.style.display = 'block';
-
-    // 使用 Canvas API 繪製煙火效果
-    const canvas = document.createElement('canvas');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    fireworksContainer.appendChild(canvas);
-    const ctx = canvas.getContext('2d');
-
-    // 煙火效果的基本邏輯
-    function drawFireworks() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // 繪製煙火效果（可根據需要自定義）
-        ctx.fillStyle = 'rgba(255, 87, 51, 1)';
-        ctx.beginPath();
-        ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 50, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    // 每 500 毫秒繪製一次煙火
-    const interval = setInterval(() => {
-        drawFireworks();
-    }, 500);
-
-    // 5 秒後停止煙火效果
-    setTimeout(() => {
-        clearInterval(interval);
-        fireworksContainer.style.display = 'none'; // 隱藏煙火
-    }, 43200);
-}
-
-// 每秒更新倒數時間
-setInterval(updateCountdown, 1000);
-updateCountdown();  // 初始顯示
-
-// 每秒更新倒數時間
-setInterval(updateCountdown, 1000);
-updateCountdown();  // 初始顯示
 
 function updateTime() {
     const now = new Date();
@@ -370,3 +289,245 @@ async function fetchCityFromCoordinates(lat, lon) {
 }
 
 updateMap();  // 初始載入地圖
+
+let fireworksActive = false;
+const MAX_PARTICLES = 500; // 最大粒子數量
+const MAX_SECONDARY_PARTICLES = 20; // 最大二次爆炸粒子數量
+const colors = ['#FF3333', '#FF9933', '#FFFF33', '#33FF33', '#33FFFF', '#3333FF', '#9933FF']; // 可用顏色
+
+function drawShape(ctx, x, y, size, shape) {
+    ctx.beginPath();
+    if (shape === 'circle') {
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+    } else if (shape === 'square') {
+        ctx.rect(x - size / 2, y - size / 2, size, size);
+    } else if (shape === 'text') {
+        ctx.font = `${size}px Arial`;
+        ctx.fillText("LOVE", x - size * 2, y + size / 2);
+    }
+    ctx.fill();
+}
+
+function generateShapeParticles(shape, x, y, size, color) {
+    const particles = [];
+    const density = 30; // 增加密度，生成更多粒子
+
+    if (shape === 'heart') {
+        for (let i = 0; i < density; i++) {
+            const angle = i * (Math.PI / density);
+            const px = x + (16 * Math.sin(angle) ** 3);
+            const py = y - (13 * Math.cos(angle) - 5 * Math.cos(2 * angle) - 2 * Math.cos(3 * angle) - Math.cos(4 * angle));
+            particles.push({ x: px, y: py, color });
+        }
+    } else if (shape === 'L') {
+        for (let i = 0; i < density; i++) {
+            const px = x + (i % 10) * size; // L的形狀
+            const py = y + (Math.floor(i / 10) * size);
+            particles.push({ x: px, y: py, color });
+        }
+    } else if (shape === 'O') {
+        for (let i = 0; i < density; i++) {
+            const angle = i * (Math.PI / (density / 2));
+            const px = x + (size * Math.cos(angle));
+            const py = y + (size * Math.sin(angle));
+            particles.push({ x: px, y: py, color });
+        }
+    } else if (shape === 'V') {
+        for (let i = 0; i < density; i++) {
+            const px = x - size + (i % 10) * (size / 5); // V的形狀
+            const py = y + (Math.floor(i / 10) * size);
+            particles.push({ x: px, y: py, color });
+        }
+    } else if (shape === 'E') {
+        for (let i = 0; i < density; i++) {
+            const px = x + (i % 10) * size; // E的形狀
+            const py = y + (Math.floor(i / 10) * size);
+            if (Math.floor(i / 10) % 2 === 0) {
+                particles.push({ x: px, y: py, color });
+            }
+        }
+    }
+
+    return particles;
+}
+
+function showFireworks() {
+    if (fireworksActive) return;
+    fireworksActive = true;
+
+    const modal = document.getElementById('modal');
+    modal.style.display = 'block';
+
+    const canvas = document.getElementById('fireworks-canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = modal.clientWidth;
+    canvas.height = modal.clientHeight;
+
+    const particles = [];
+
+    function createFirework(shape, x, y) {
+        const size = Math.random() * 15 + 15; // 增加粒子大小
+        const color = colors[Math.floor(Math.random() * colors.length)]; // 隨機顏色
+        const shapeParticles = generateShapeParticles(shape, x, y, size, color);
+
+        shapeParticles.forEach(({ x: px, y: py, color }) => {
+            particles.push({
+                x: px,
+                y: py,
+                speedX: (Math.random() - 0.5) * 4,
+                speedY: (Math.random() - 0.5) * 4 - 2,
+                alpha: 1,
+                life: Math.random() * 40 + 80,
+                size: Math.random() * 5 + 5, // 增加大小
+                glow: true,
+                color,
+                launchX: x, // 紀錄發射點X
+                launchY: y,  // 紀錄發射點Y
+                trajectory: [], // 紀錄粒子的軌跡
+                secondary: false // 標記是否為二次爆炸的粒子
+            });
+        });
+    }
+
+    function triggerSecondaryExplosion(particle) {
+        // 檢查當前二次爆炸粒子的數量
+        const secondaryParticlesCount = particles.filter(p => p.secondary).length;
+        if (secondaryParticlesCount >= MAX_SECONDARY_PARTICLES) return; // 超過最大數量，不進行二次爆炸
+
+        // 提高生成二次爆炸的機率
+        const shouldExplode = Math.random() < 0.8; // 80% 機率生成二次爆炸粒子
+        if (shouldExplode) {
+            const numSecondaryParticles = Math.floor(Math.random() * 10) + 5; // 隨機數量的二次爆炸粒子
+            for (let i = 0; i < numSecondaryParticles; i++) {
+                const angle = Math.random() * Math.PI * 2; // 隨機角度
+                const speed = Math.random() * 3 + 1; // 隨機速度
+                const secondaryParticle = {
+                    x: particle.x,
+                    y: particle.y,
+                    speedX: Math.cos(angle) * speed,
+                    speedY: Math.sin(angle) * speed,
+                    alpha: 1,
+                    life: 50, // 二次爆炸粒子的生命
+                    size: Math.random() * 5 + 2, // 隨機大小
+                    glow: false,
+                    color: '#FFFFFF', // 所有二次爆炸粒子使用白色
+                    trajectory: [],
+                    secondary: true // 標記為二次爆炸的粒子
+                };
+                particles.push(secondaryParticle);
+            }
+        }
+    }
+
+    function drawRocketTrajectory(startX, startY, endY) {
+        ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)'; // 明顯的黃色
+        ctx.lineWidth = 4; // 增加線條寬度
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX, endY);
+        ctx.stroke();
+    }
+
+    function updateParticles() {
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const particle = particles[i];
+
+            // 更新位置
+            particle.x += particle.speedX;
+            particle.y += particle.speedY;
+            particle.alpha -= 0.01; // 緩慢減少透明度
+            particle.life -= 1;
+
+            // 模擬重力
+            particle.speedY += 0.1; // 增加重力影響
+
+            // 紀錄軌跡
+            particle.trajectory.push({ x: particle.x, y: particle.y });
+
+            // 檢查是否需要觸發二次爆炸
+            if (!particle.secondary && particle.life <= 0) {
+                triggerSecondaryExplosion(particle);
+                particle.secondary = true; // 標記為已經觸發過二次爆炸
+            }
+
+            if (particle.alpha <= 0 || particle.life <= 0) {
+                particles.splice(i, 1);
+            }
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(particle => {
+            ctx.fillStyle = particle.color; // 使用單一顏色
+            ctx.globalAlpha = particle.alpha;
+
+            // 加入光芒效果
+            if (particle.glow) {
+                const glowSize = particle.size * 3; // 擴大光芒效果
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.shadowBlur = glowSize;
+            } else {
+                ctx.shadowColor = 'transparent';
+            }
+
+            // 繪製粒子
+            drawShape(ctx, particle.x, particle.y, particle.size, 'circle');
+
+            // 繪製從發射點到粒子的曲線
+            ctx.strokeStyle = particle.color; // 使用粒子的顏色
+            ctx.lineWidth = 2; // 線條寬度
+            ctx.globalAlpha = particle.alpha; // 設置線條透明度
+            ctx.beginPath();
+
+            // 繪製曲線
+            if (particle.trajectory.length > 0) {
+                ctx.moveTo(particle.launchX, particle.launchY);
+                for (let point of particle.trajectory) {
+                    ctx.lineTo(point.x, point.y);
+                }
+            }
+
+            ctx.stroke();
+        });
+    }
+
+    function animate() {
+        updateParticles();
+        draw();
+        requestAnimationFrame(animate);
+    }
+
+    setInterval(() => {
+        if (particles.length < MAX_PARTICLES) {
+            const startX = Math.random() * canvas.width; // 隨機起始X坐標
+            const launchHeight = Math.random() * (canvas.height * 0.4) + (canvas.height * 0.4); // 隨機發射高度
+
+            // 繪製火箭軌跡
+            drawRocketTrajectory(startX, canvas.height, launchHeight);
+
+            // 隨機生成心形、字母L、O、V、E
+            const shapes = ['heart', 'L', 'O', 'V', 'E'];
+            const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
+            createFirework(randomShape, startX, launchHeight); // 在隨機高度發射
+        }
+    }, 300); // 增加發射頻率
+
+    setTimeout(() => {
+        // 關閉浮動視窗並停止煙火效果
+        modal.style.display = 'none';
+        fireworksActive = false;
+    }, 60000); // 60000毫秒（即1分鐘）
+    
+    document.querySelector('.close').onclick = function() {
+        modal.style.display = 'none';
+        fireworksActive = false; // 停止煙火效果
+    };
+
+    animate();
+}
+
+document.getElementById('happy-new-year').onclick = showFireworks;
+
+showFireworks();
