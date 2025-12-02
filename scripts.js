@@ -45,7 +45,7 @@ let allData = [];
 let autoLoadInterval;
 let stationIDFilter = ''; // 儲存測站 ID 篩選
 
-const airQualityDataURL = 'https://sta.colife.org.tw/STA_AirQuality_EPAIoT/v1.0/Datastreams?$select=name,description&$expand=Thing($select=name,properties/stationID,properties/city),Thing/Locations($select=location/coordinates),Observations($orderby=phenomenonTime%20desc;$top=1;$select=phenomenonTime,result)&$filter=name%20eq%20%27PM2.5%27&$count=true';
+const airQualityDataURL = 'https://sta.colife.org.tw/STA_AirQuality_EPAIoT/v1.0/Datastreams?$select=name,description&$expand=Thing($select=name,properties/stationID,properties/areaType),Thing/Locations($select=location/coordinates),Observations($orderby=phenomenonTime%20desc;$top=1;$select=phenomenonTime,result)&$filter=name%20eq%20%27PM2.5%27&$count=true';
 
 async function fetchAirQualityData(page) {
     try {
@@ -101,7 +101,7 @@ async function updateMap() {
         const coordinates = item.Thing.Locations[0].location.coordinates;
         const pm25Value = item.Observations[0]?.result || 0;
         const airQualityLevel = getAirQualityLevel(pm25Value);
-        const cityName = item.Thing.properties.city || "未知";
+        const cityName = item.Thing.properties.areaType || "未知";
 
         // 檢查篩選條件
         if ((selectedCity === '所有' || cityName === selectedCity) && 
