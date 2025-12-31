@@ -3,77 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TW IoT PM2.5 空氣品質監測地圖</title>
+    <title>2026 TWIoT 高效能監測系統</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
     <div id="countdown-timer" class="countdown-timer"></div>
 
-    <div id="modal" class="modal">
-        <button class="close">&times;</button>
+    <div id="modal" class="modal" style="display:block;">
+        <button class="close-btn" id="modal-close-btn">進入系統 ×</button>
         <canvas id="fireworks-canvas"></canvas>
-        <div id="happy-new-year" class="happy-new-year">
-            TWIoT PM2.5 MAP<br>
-            <span id="year-text">2025</span> NEW YEAR
+        <div class="happy-new-year">
+            <div class="brand-text">TWIoT PM2.5</div>
+            <div class="year-text">2026</div>
+            <div class="wish-text">Happy New Year</div>
         </div>
     </div>
     
-    <div id="current-time" class="current-time"></div>
     <div id="map"></div>
 
+    <div class="map-overlay-legend">
+        <h4>PM2.5 指標</h4>
+        <div class="legend-item"><span class="dot green"></span> 良好 (0-35)</div>
+        <div class="legend-item"><span class="dot yellow"></span> 普通 (36-75)</div>
+        <div class="legend-item"><span class="dot orange"></span> 不良 (76-150)</div>
+        <div class="legend-item"><span class="dot red"></span> 危害 (151+)</div>
+        <div class="legend-item"><span class="dot gray"></span> 異常/維修</div>
+    </div>
+
     <div id="dashboard">
-        <h2>TW IoT PM2.5</h2>
+        <div id="side-clock" class="side-clock">載入時間...</div>
+        <h2>數據控制台</h2>
         
-        <div class="filter-controls">
-            <label for="city-select">選擇縣市:</label>
-            <select id="city-select"><option value="所有">載入中...</option></select>
+        <div class="control-group">
+            <label>縣市快速篩選</label>
+            <select id="city-select"><option value="所有">連線中...</option></select>
         </div>
 
-        <div class="filter-controls">
-            <label for="quality-select">品質等級:</label>
-            <select id="quality-select">
-                <option value="所有">所有</option>
-                <option value="良好">良好</option>
-                <option value="普通">普通</option>
-                <option value="不良">不良</option>
-                <option value="非常不良">非常不良</option>
-                <option value="危害">危害</option>
-            </select>
+        <div class="btn-row">
+            <button id="locate-btn" class="btn-blue-outline">📍 我的位置</button>
+            <button id="refresh-now-btn" class="btn-gray">⚡ 更新</button>
         </div>
 
-        <div class="filter-controls">
-            <label for="station-id-filter">搜尋測站 ID:</label>
-            <input type="text" id="station-id-filter" placeholder="輸入 ID 關鍵字...">
+        <div class="btn-row" style="margin-top:10px;">
+            <button id="auto-update-btn" class="btn-green">🔄 自動更新：關</button>
+            <button id="show-chart" class="btn-blue">📊 統計分析</button>
         </div>
         
-        <div class="load-controls">
-            <button id="locate-me">📍 定位</button>
-            <button id="auto-load">🔄 自動更新: 關</button>
-            <button id="load-more">更多資料</button>
-            <button id="show-chart">統計圖</button>
-        </div>
-
         <hr>
-        <div id="station-info"><p>正在獲取感測器數據...</p></div>
-        <div id="error-message" class="error-message"></div>
+        <div id="station-status-summary" style="font-weight:bold; color:#007bff;">系統啟動中...</div>
+        <div id="station-info-list" class="station-list"></div>
 
         <div id="chart-container">
             <div id="chart-close">✖ 關閉</div>
+            <h3 style="text-align:center;">品質分佈對數圖</h3>
             <div style="height: 300px;"><canvas id="station-chart"></canvas></div>
-        </div>
-    </div>
-
-    <div class="legend">
-        <h4>PM2.5 指標 <span id="legend-toggle" style="cursor:pointer; color:blue;">(隱藏)</span></h4>
-        <div id="legend-content">
-            <div style="color: green;">● 良好 (0-35)</div>
-            <div style="color: #cccc00;">● 普通 (36-75)</div>
-            <div style="color: orange;">● 不良 (76-150)</div>
-            <div style="color: red;">● 非常不良 (151-250)</div>
-            <div style="color: purple;">● 危害 (>250)</div>
         </div>
     </div>
 

@@ -1,235 +1,50 @@
-/* --- 基礎佈局優化 --- */
-body {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
-    height: 100vh;
-    background-color: #f0f2f5;
-    overflow: hidden;
-}
+/* --- 基礎設定 --- */
+body { margin: 0; display: flex; font-family: sans-serif; height: 100vh; overflow: hidden; }
+#map { width: 75%; height: 100vh; z-index: 1; }
+#dashboard { width: 25%; background: white; padding: 20px; z-index: 10; display: flex; flex-direction: column; box-shadow: -5px 0 15px rgba(0,0,0,0.1); }
 
-#map {
-    height: 100vh;
-    width: 75%;
-    position: relative;
-    z-index: 1;
-}
+/* --- 煙火視窗修復 --- */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9000; }
+#fireworks-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 9001; }
 
-#dashboard {
-    width: 25%;
-    height: 100vh;
-    background: #ffffff;
-    padding: 20px;
-    box-sizing: border-box;
-    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
-    overflow-y: auto;
-    z-index: 2;
-}
-
-/* --- 篩選控制項樣式 --- */
-h2 {
-    color: #333;
-    border-left: 5px solid #007BFF;
-    padding-left: 10px;
-    margin-top: 0;
-}
-
-.filter-controls {
-    margin-bottom: 15px;
-}
-
-.filter-controls label {
-    display: block;
+.close-btn { 
+    position: absolute; 
+    top: 40px; 
+    right: 40px; 
+    z-index: 10000 !important; /* 強制置頂 */
+    background: #ff4757; 
+    color: white; 
+    border: 3px solid #fff; /* 加入白邊 */
+    padding: 15px 30px; 
+    border-radius: 50px; 
+    cursor: pointer; 
+    font-size: 20px; 
     font-weight: bold;
-    margin-bottom: 5px;
-    color: #555;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 10px rgba(255, 71, 87, 0.5); 
 }
 
-.filter-controls select, 
-.filter-controls input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 14px;
-    box-sizing: border-box;
-}
+.happy-new-year { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; z-index: 9002; pointer-events: none; }
+.brand-text { font-size: 30px; color: #fff; letter-spacing: 4px; text-shadow: 0 0 10px #000; }
+.year-text { font-size: 120px; color: #FFD700; line-height: 1; margin: 20px 0; animation: pulse 2s infinite; text-shadow: 0 0 20px #000; }
+.wish-text { font-size: 45px; color: #fff; font-style: italic; text-shadow: 0 0 10px #000; }
+@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-/* --- 按鈕樣式優化 --- */
-.load-controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 15px;
-}
+/* --- 其他功能元件 --- */
+.side-clock { background: #111; color: #00f2fe; padding: 10px; border-radius: 5px; text-align: center; font-family: monospace; font-size: 16px; margin-bottom: 15px; }
+.countdown-timer { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); z-index: 2000; background: rgba(0,0,0,0.85); color: #ffd700; padding: 10px 25px; border-radius: 50px; border: 2px solid #ffd700; font-weight: bold; }
+.map-overlay-legend { position: absolute; bottom: 30px; left: 20px; background: rgba(255,255,255,0.9); padding: 12px; border-radius: 8px; z-index: 1000; font-size: 13px; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+.dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.green { background: green; } .yellow { background: #cccc00; } .orange { background: orange; } .red { background: red; } .gray { background: gray; }
 
-.load-controls button {
-    padding: 10px;
-    font-size: 14px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    background-color: #007BFF;
-    color: white;
-    transition: all 0.3s;
-    font-weight: bold;
-}
+.btn-row { display: flex; gap: 8px; }
+button { flex: 1; border: none; padding: 12px; border-radius: 6px; color: white; cursor: pointer; font-weight: bold; }
+.btn-blue-outline { background: #fff; color: #007bff; border: 2px solid #007bff; }
+.btn-gray { background: #6c757d; } .btn-green { background: #28a745; } .btn-blue { background: #007bff; }
+.user-location-dot { background: #007bff; border: 2px solid #fff; border-radius: 50%; animation: rip 2s infinite; }
+@keyframes rip { 0% { box-shadow: 0 0 0 0 rgba(0,123,255,0.7); } 100% { box-shadow: 0 0 0 15px rgba(0,123,255,0); } }
 
-.load-controls button:hover {
-    background-color: #0056b3;
-    transform: translateY(-2px);
-}
+.station-list { flex-grow: 1; overflow-y: auto; margin-top: 15px; }
+.station-card { background: #f8f9fa; padding: 10px; margin-bottom: 8px; border-radius: 4px; border-left: 4px solid #007bff; font-size: 13px; cursor: pointer; }
 
-/* --- 測站資訊清單 --- */
-#station-info {
-    margin-top: 15px;
-}
-
-.station-item {
-    background: #fff;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #eee;
-    border-left: 5px solid #007BFF;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    font-size: 13px;
-    line-height: 1.5;
-}
-
-/* --- 倒數計時器 (左上角) --- */
-.countdown-timer {
-    position: fixed;
-    top: 15px;
-    left: 15px;
-    z-index: 2000;
-    background: rgba(0, 0, 0, 0.75);
-    color: #00ffcc;
-    padding: 12px 18px;
-    border-radius: 8px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
-    pointer-events: none;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    line-height: 1.4;
-}
-
-/* --- 即時時間 --- */
-.current-time {
-    position: absolute;
-    top: 15px;
-    left: 200px; /* 避開倒數計時器 */
-    font-size: 16px;
-    font-weight: bold;
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    padding: 8px 15px;
-    border-radius: 8px;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* --- 統計圖表浮窗 --- */
-#chart-container {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    border-radius: 12px;
-    padding: 25px;
-    z-index: 3000;
-    width: 90%;
-    max-width: 600px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-}
-
-#chart-close {
-    cursor: pointer;
-    color: #ff4757;
-    float: right;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-/* --- 地圖圖例 (左下角) --- */
-.legend {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 12px;
-    border-radius: 8px;
-    position: absolute;
-    bottom: 25px;
-    left: 15px;
-    z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.legend h4 {
-    margin: 0 0 8px 0;
-    font-size: 14px;
-    color: #333;
-}
-
-/* --- 新年模態框與煙火 --- */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 4000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
-}
-
-.happy-new-year {
-    position: absolute;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: #FFD700;
-    font-size: 42px;
-    font-weight: bold;
-    text-align: center;
-    text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-    pointer-events: none;
-}
-
-#year-text {
-    font-size: 60px;
-    display: block;
-    margin-top: 10px;
-}
-
-.close {
-    position: absolute;
-    top: 25px;
-    right: 25px;
-    width: 45px;
-    height: 45px;
-    background-color: #ff4757;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 4001;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: 0.3s;
-}
-
-.close:hover { background-color: #ff6b81; }
-
-/* --- 響應式優化 (手機板) --- */
-@media (max-width: 768px) {
-    body { flex-direction: column; }
-    #map { width: 100%; height: 60vh; }
-    #dashboard { width: 100%; height: 40vh; }
-    .current-time { left: 15px; top: 100px; }
-    .happy-new-year { font-size: 28px; }
-}
+#chart-container { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 12px; z-index: 9500; width: 90%; max-width: 600px; box-shadow: 0 10px 50px rgba(0,0,0,0.5); }
+#chart-close { float: right; cursor: pointer; color: red; font-weight: bold; }

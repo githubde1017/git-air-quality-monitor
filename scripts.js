@@ -1,251 +1,177 @@
-// --- 全域變數定義 ---
-let selectedCity = '所有';
-let selectedQuality = '所有';
-let stationIDFilter = '';
 let allData = [];
-let currentPage = 1;
-const pageSize = 2000;
-let autoUpdateInterval = null;
 let myChart = null;
+let autoTimer = null;
+let selectedCity = '所有';
+let userMarker = null;
 
-// --- 1. 初始化地圖 ---
 const map = L.map('map').setView([23.6, 121.0], 7);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-const airQualityDataURL = 'https://sta.colife.org.tw/STA_AirQuality_EPAIoT/v1.0/Datastreams?$select=name,description&$expand=Thing($select=name,properties),Thing/Locations($select=location/coordinates),Observations($orderby=phenomenonTime%20desc;$top=1;$select=phenomenonTime,result)&$filter=name%20eq%20%27PM2.5%27&$count=true';
-
-// --- 2. 跨年倒數與年份自動更新 ---
-function initCountdown() {
-    const countdownEl = document.getElementById('countdown-timer');
-    const yearTextEl = document.getElementById('year-text');
-
-    const tick = () => {
+// --- 1. 時間功能 ---
+function startTimers() {
+    setInterval(() => {
         const now = new Date();
-        const nextYear = now.getFullYear() + (now.getMonth() === 0 && now.getDate() === 1 ? 0 : 1);
-        const target = new Date(`January 1, ${nextYear} 00:00:00`).getTime();
-        const diff = target - now.getTime();
-
-        if (diff <= 0) {
-            countdownEl.innerHTML = "🎉 HAPPY NEW YEAR!";
-            if (yearTextEl) yearTextEl.innerText = now.getFullYear();
-            return;
-        }
-
-        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const m = Math.floor((diff / (1000 * 60)) % 60);
+        document.getElementById('side-clock').innerText = 
+            `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${now.toLocaleTimeString('zh-TW',{hour12:false})}`;
+        
+        const diff = new Date("2027-01-01T00:00:00") - now;
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff / 3600000) % 24);
+        const m = Math.floor((diff / 60000) % 60);
         const s = Math.floor((diff / 1000) % 60);
-
-        countdownEl.innerHTML = `距離 ${nextYear} 年還有：<br><b>${d}天 ${h}時 ${m}分 ${s}秒</b>`;
-        // 同步更新模態框年份（如果還沒跨過 2026）
-        if (yearTextEl && now.getFullYear() < nextYear) yearTextEl.innerText = now.getFullYear();
-    };
-    setInterval(tick, 1000);
-    tick();
+        document.getElementById('countdown-timer').innerText = `2027 跨年倒數：${d}天 ${h}時 ${m}分 ${s}秒`;
+    }, 1000);
 }
 
-// --- 3. 定位功能：逆地理編碼篩選縣市 ---
-document.getElementById('locate-me').onclick = () => map.locate({setView: true, maxZoom: 12});
-
-map.on('locationfound', async (e) => {
-    L.marker(e.latlng).addTo(map).bindPopup("您的位置").openPopup();
+// --- 2. 高效 2000 筆資料讀取 ---
+async function fetchData() {
+    const apiURL = 'https://sta.colife.org.tw/STA_AirQuality_EPAIoT/v1.0/Datastreams?$top=2000&$select=name&$expand=Thing($select=name,properties),Thing/Locations($select=location/coordinates),Observations($orderby=phenomenonTime%20desc;$top=1;$select=result)&$filter=name%20eq%20%27PM2.5%27';
+    let nextLink = apiURL;
+    const statusEl = document.getElementById('station-status-summary');
+    allData = [];
+    
     try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}&accept-language=zh-TW`);
-        const json = await res.json();
-        const city = (json.address.city || json.address.town || json.address.county || "").replace('台', '臺');
-        
-        const citySelect = document.getElementById('city-select');
-        if ([...citySelect.options].some(opt => opt.value === city)) {
-            citySelect.value = city;
-            selectedCity = city;
-            updateMap(true);
-            alert(`偵測到位置：${city}，已自動過濾。`);
+        while (nextLink) {
+            statusEl.innerText = `📡 高度同步中... 已載入 ${allData.length} 站`;
+            const res = await fetch(nextLink);
+            const json = await res.json();
+            if (json.value) {
+                allData = allData.concat(json.value);
+                refreshUI(false); 
+            }
+            nextLink = json['@iot.nextLink'] || null;
+            await new Promise(r => setTimeout(r, 10)); 
         }
-    } catch (err) { console.error("定位轉換失敗", err); }
-});
-
-// --- 4. 自動更新邏輯 ---
-document.getElementById('auto-load').onclick = function() {
-    if (autoUpdateInterval) {
-        clearInterval(autoUpdateInterval);
-        autoUpdateInterval = null;
-        this.innerText = "🔄 自動更新: 關";
-        this.style.backgroundColor = "";
-    } else {
-        autoUpdateInterval = setInterval(() => updateMap(true), 60000);
-        this.innerText = "🔄 自動更新: 開 (60s)";
-        this.style.backgroundColor = "#90ee90";
-        updateMap(true);
+        statusEl.innerText = `✅ 同步完成: 共 ${allData.length} 測站`;
+        updateCityDropdown();
+    } catch (e) {
+        statusEl.innerText = "❌ 網路連線錯誤";
     }
-};
+}
 
-// --- 5. 統計圖表邏輯 ---
-function updateChart() {
-    const ctx = document.getElementById('station-chart').getContext('2d');
-    const counts = { '良好': 0, '普通': 0, '不良': 0, '非常不良': 0, '危害': 0 };
+// --- 3. GPS 定位 ---
+function locateMe() {
+    if (!navigator.geolocation) return alert("瀏覽器不支援定位");
+    navigator.geolocation.getCurrentPosition((pos) => {
+        const { latitude: lat, longitude: lng } = pos.coords;
+        if (userMarker) map.removeLayer(userMarker);
+        const icon = L.divIcon({ className: 'user-location-dot', iconSize: [12, 12] });
+        userMarker = L.marker([lat, lng], { icon }).addTo(map).bindPopup("您的位置").openPopup();
+        map.flyTo([lat, lng], 14);
+    }, () => alert("定位失敗，請確認 GPS 權限"));
+}
+
+// --- 4. 統計與 UI ---
+function getLevel(v) {
+    if (v < 0 || v > 500) return '異常';
+    if (v <= 35) return '良好';
+    if (v <= 75) return '普通';
+    if (v <= 150) return '不良';
+    return '危害';
+}
+const getColor = (l) => ({'良好':'green','普通':'#cccc00','不良':'orange','危害':'red','異常':'gray'}[l]);
+
+function refreshUI(resetMap = true) {
+    if (resetMap) map.eachLayer(l => { if (l instanceof L.CircleMarker) map.removeLayer(l); });
+    const listEl = document.getElementById('station-info-list');
+    if (resetMap) listEl.innerHTML = '';
 
     allData.forEach(item => {
-        const props = item.Thing.properties || {};
-        const cityName = props.city || props.county || props.areaType || "未知";
-        if (selectedCity === '所有' || cityName === selectedCity) {
-            const level = getLevel(item.Observations[0]?.result);
-            if (counts[level] !== undefined) counts[level]++;
+        const val = item.Observations[0]?.result ?? -1;
+        const level = getLevel(val);
+        const city = item.Thing.properties.city || item.Thing.properties.county || "未知";
+        
+        if (selectedCity === '所有' || city === selectedCity) {
+            const coord = item.Thing.Locations[0].location.coordinates;
+            const marker = L.circleMarker([coord[1], coord[0]], {
+                radius: 7, fillColor: getColor(level), color: '#fff', weight: 1, fillOpacity: 0.8
+            }).addTo(map).bindPopup(`<b>${item.Thing.name}</b><br>PM2.5: ${val}`);
+
+            if (resetMap) {
+                const card = document.createElement('div');
+                card.className = 'station-card';
+                card.style.borderLeftColor = getColor(level);
+                card.innerHTML = `<b>${item.Thing.name}</b><br>${city} | PM2.5: ${val}`;
+                card.onclick = () => { map.flyTo([coord[1], coord[0]], 15); marker.openPopup(); };
+                listEl.appendChild(card);
+            }
         }
     });
+    updateChart();
+}
 
+
+
+function updateChart() {
+    const counts = { '良好': 0, '普通': 0, '不良': 0, '危害': 0, '異常': 0 };
+    allData.forEach(i => counts[getLevel(i.Observations[0]?.result ?? -1)]++);
+    const ctx = document.getElementById('station-chart').getContext('2d');
     if (myChart) myChart.destroy();
     myChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: Object.keys(counts),
-            datasets: [{
-                label: `站點數量 (${selectedCity})`,
-                data: Object.values(counts),
-                backgroundColor: ['green', '#cccc00', 'orange', 'red', 'purple']
-            }]
+            datasets: [{ label: '測站分佈 (Log Scale)', data: Object.values(counts), backgroundColor: ['green','#cccc00','orange','red','gray'] }]
         },
-        options: { responsive: true, maintainAspectRatio: false }
+        options: { scales: { y: { type: 'logarithmic' } } }
     });
 }
 
-// --- 6. 核心：資料處理 ---
-async function updateMap(isRefresh = false) {
-    if (isRefresh) { currentPage = 1; allData = []; }
-    const skip = (currentPage - 1) * pageSize;
-    const url = `${airQualityDataURL}&$top=${pageSize}&$skip=${skip}`;
-    
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (isRefresh) allData = data.value;
-        else allData = allData.concat(data.value);
-
-        updateCityDropdown(allData);
-        map.eachLayer(l => { if (l instanceof L.CircleMarker) map.removeLayer(l); });
-        const info = document.getElementById('station-info');
-        info.innerHTML = '';
-
-        allData.forEach(item => {
-            const props = item.Thing.properties || {};
-            const cityName = props.city || props.county || props.areaType || "未知";
-            const stID = props.stationID || "未知";
-            const val = item.Observations[0]?.result || 0;
-            const level = getLevel(val);
-
-            if ((selectedCity === '所有' || cityName === selectedCity) && 
-                (selectedQuality === '所有' || level === selectedQuality) &&
-                (stationIDFilter === '' || String(stID).includes(stationIDFilter))) {
-                
-                const coord = item.Thing.Locations[0].location.coordinates;
-                L.circleMarker([coord[1], coord[0]], {
-                    radius: 8, fillColor: getColor(level), color: '#000', weight: 1, fillOpacity: 0.7
-                }).addTo(map).bindPopup(`<b>${item.Thing.name}</b><br>ID: ${stID}<br>縣市: ${cityName}<br>PM2.5: ${val} (${level})`);
-
-                const div = document.createElement('div');
-                div.className = 'station-item';
-                div.innerHTML = `<b>${item.Thing.name}</b> (${cityName})<br>ID: ${stID} | PM2.5: ${val}`;
-                info.appendChild(div);
-            }
-        });
-        updateChart();
-    } catch (e) { console.error("資料載入錯誤", e); }
-}
-
-function getLevel(v) {
-    if (v <= 35) return '良好'; if (v <= 75) return '普通'; if (v <= 150) return '不良';
-    if (v <= 250) return '非常不良'; return '危害';
-}
-function getColor(l) {
-    return { '良好': 'green', '普通': '#cccc00', '不良': 'orange', '非常不良': 'red', '危害': 'purple' }[l] || 'gray';
-}
-function updateCityDropdown(data) {
-    const select = document.getElementById('city-select');
-    const current = select.value;
-    const cities = new Set(['所有']);
-    data.forEach(i => {
-        const p = i.Thing.properties;
-        cities.add(p.city || p.county || p.areaType || "未知");
-    });
-    if (select.options.length !== cities.size) {
-        select.innerHTML = '';
-        Array.from(cities).sort().forEach(c => {
-            const o = document.createElement('option');
-            o.value = o.text = c;
-            select.appendChild(o);
-        });
-        select.value = cities.has(current) ? current : '所有';
-    }
-}
-
-// --- 7. 初始化與事件監聽 ---
+// --- 5. 初始化與事件 ---
 window.onload = () => {
-    document.getElementById('modal').style.display = 'block';
-    initCountdown();
-    updateMap();
+    startTimers(); fetchData();
+    document.getElementById('modal-close-btn').onclick = () => {
+        const modal = document.getElementById('modal');
+        modal.style.transition = "opacity 0.6s ease";
+        modal.style.opacity = "0";
+        setTimeout(() => modal.style.display = 'none', 600);
+    };
+    document.getElementById('locate-btn').onclick = locateMe;
+    document.getElementById('refresh-now-btn').onclick = fetchData;
+    document.getElementById('city-select').onchange = (e) => { selectedCity = e.target.value; refreshUI(true); };
+    document.getElementById('show-chart').onclick = () => document.getElementById('chart-container').style.display = 'block';
+    document.getElementById('chart-close').onclick = () => document.getElementById('chart-container').style.display = 'none';
+    document.getElementById('auto-update-btn').onclick = function() {
+        if (autoTimer) {
+            clearInterval(autoTimer); autoTimer = null;
+            this.innerText = "🔄 自動更新：關"; this.className = "btn-green";
+        } else {
+            fetchData(); autoTimer = setInterval(fetchData, 60000);
+            this.innerText = "🔄 自動更新：開"; this.className = "btn-gray";
+        }
+    };
 };
 
-document.getElementById('city-select').onchange = (e) => { selectedCity = e.target.value; updateMap(); };
-document.getElementById('quality-select').onchange = (e) => { selectedQuality = e.target.value; updateMap(); };
-document.getElementById('station-id-filter').oninput = (e) => { stationIDFilter = e.target.value.trim(); updateMap(); };
-document.getElementById('load-more').onclick = () => { currentPage++; updateMap(); };
-document.getElementById('show-chart').onclick = () => document.getElementById('chart-container').style.display = 'block';
-document.getElementById('chart-close').onclick = () => document.getElementById('chart-container').style.display = 'none';
-document.querySelector('.close').onclick = () => document.getElementById('modal').style.display = 'none';
+function updateCityDropdown() {
+    const select = document.getElementById('city-select');
+    const cities = new Set(['所有']);
+    allData.forEach(i => cities.add(i.Thing.properties.city || i.Thing.properties.county || "未知"));
+    select.innerHTML = '';
+    Array.from(cities).sort().forEach(c => {
+        const o = document.createElement('option'); o.value = o.text = c; select.appendChild(o);
+    });
+}
 
-
-// --- 煙火與時間邏輯 (省略重複部分，請保留您原本的煙火代碼) ---
-
-// --- 2025 新年煙火效果腳本 ---
+// 煙火動畫
 const canvas = document.getElementById('fireworks-canvas');
-const ctx = canvas.getContext('2d');
-const modal = document.getElementById('modal');
-canvas.width = window.innerWidth * 0.8;
-canvas.height = window.innerHeight * 0.8;
-
+const ctxF = canvas.getContext('2d');
 let particles = [];
-const MAX_PARTICLES = 100;
-
-class Particle {
-    constructor(x, y, color, shape = 'circle', size = 2) {
-        this.x = x; this.y = y; this.color = color; this.shape = shape;
-        this.size = size;
-        this.angle = Math.random() * Math.PI * 2;
-        this.velocity = Math.random() * 3 + 1;
-        this.friction = 0.95; this.gravity = 0.05; this.opacity = 1;
-    }
-    update() {
-        this.velocity *= this.friction;
-        this.x += Math.cos(this.angle) * this.velocity;
-        this.y += Math.sin(this.angle) * this.velocity + this.gravity;
-        this.opacity -= 0.01;
-    }
-    draw() {
-        ctx.globalAlpha = this.opacity;
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
+function animate() {
+    ctxF.fillStyle = 'rgba(0,0,0,0.2)'; ctxF.fillRect(0,0,canvas.width,canvas.height);
+    particles.forEach((p,i) => {
+        p.x += Math.cos(p.a)*p.v; p.y += Math.sin(p.a)*p.v + 0.5; p.o -= 0.01;
+        ctxF.globalAlpha = p.o; ctxF.fillStyle = p.c;
+        ctxF.beginPath(); ctxF.arc(p.x, p.y, 2, 0, 7); ctxF.fill();
+        if(p.o <= 0) particles.splice(i,1);
+    });
+    requestAnimationFrame(animate);
 }
-
-function createFirework(shape, x, y) {
-    const color = `hsl(${Math.random() * 360}, 100%, 50%)`;
-    for (let i = 0; i < 50; i++) {
-        particles.push(new Particle(x, y, color, shape));
-    }
-}
-
-function animateFireworks() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles = particles.filter(p => p.opacity > 0);
-    particles.forEach(p => { p.update(); p.draw(); });
-    requestAnimationFrame(animateFireworks);
-}
-
 setInterval(() => {
-    if (modal.style.display === 'block') {
-        createFirework('circle', Math.random() * canvas.width, Math.random() * canvas.height * 0.5);
+    if(document.getElementById('modal').style.display !== 'none') {
+        const x = Math.random()*canvas.width, y = Math.random()*canvas.height*0.5;
+        const c = `hsl(${Math.random()*360},100%,50%)`;
+        for(let i=0; i<30; i++) particles.push({x,y,c,a:Math.random()*6,v:Math.random()*4+1,o:1});
     }
-}, 500);
-
-animateFireworks();
+}, 350);
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+animate();
