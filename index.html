@@ -3,99 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>空氣品質監測地圖</title>
+    <title>TW IoT PM2.5 空氣品質監測地圖</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css" />
     <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
+    <div id="countdown-timer" class="countdown-timer"></div>
+
     <div id="modal" class="modal">
-        <button class="close">&times;</button> <!-- 使用按鈕元素 -->
+        <button class="close">&times;</button>
         <canvas id="fireworks-canvas"></canvas>
-        <div id="happy-new-year" class="happy-new-year">TWIoT PM2.5 MAP</div>
+        <div id="happy-new-year" class="happy-new-year">
+            TWIoT PM2.5 MAP<br>
+            <span id="year-text">2025</span> NEW YEAR
+        </div>
     </div>
     
-<div id="fireworks" class="fireworks" style="display: none;"></div>
-<div id="current-time" class="current-time"></div>
-<div id="map"></div>
-<div id="dashboard">
-    <h2><p><strong>TW IoT PM2.5</strong></p></h2>
-    <p><strong>**注意事項說明**</strong></p>
-    <p><b>§官方微型感測器資料，部分縣市的定義為"未知"。</b></p>
-    <p><b>§測站ID可篩選特定測站編號輸入數字。</b></p>
-    <button class="blink-button" onclick="showModal()">TWIoT PM2.5 MAP</button>
-    <div class="filter-controls">
-        <label for="city-select">選擇縣市:</label>
-        <select id="city-select">
-            <option value="所有">所有</option>
-            <option value="基隆市">基隆市</option>
-            <option value="台北市">臺北市</option>
-            <option value="新北市">新北市</option>
-            <option value="桃園市">桃園市</option>
-            <option value="臺中市">臺中市</option>
-            <option value="臺南市">臺南市</option>
-            <option value="高雄市">高雄市</option>
-            <option value="宜蘭縣">宜蘭縣</option>
-            <option value="新竹縣">新竹縣</option>
-            <option value="新竹市">新竹市</option>
-            <option value="苗栗縣">苗栗縣</option>
-            <option value="彰化縣">彰化縣</option>
-            <option value="南投縣">南投縣</option>
-            <option value="雲林縣">雲林縣</option>
-            <option value="嘉義縣">嘉義縣</option>
-            <option value="嘉義市">嘉義市</option>
-            <option value="臺東縣">臺東縣</option>
-            <option value="花蓮縣">花蓮縣</option>
-            <option value="澎湖縣">澎湖縣</option>
-            <option value="金門縣">金門縣</option>
-            <option value="連江縣">連江縣</option>
-            <option value="未知">未知</option>
-        </select>
-        <button id="locate-btn">定位</button>
-    </div>
-    <div class="filter-controls">
-        <label for="station-id">輸入測站ID:</label>
-        <input type="text" id="station-id" placeholder="測站ID">
-    </div>
-    <div class="filter-controls">
-        <label for="quality-select">選擇空氣品質等級:</label>
-        <select id="quality-select">
-            <option value="所有">所有</option>
-            <option value="良好">良好</option>
-            <option value="普通">普通</option>
-            <option value="不良">不良</option>
-            <option value="非常不良">非常不良</option>
-            <option value="危害">危害</option>
-        </select>
-    </div>
-    
-    <div class="load-controls">
-        <button id="load-more">手動加載資料</button>
-        <button id="auto-load">自動加載資料</button>
-        <button id="show-chart">顯示統計圖表</button>
+    <div id="current-time" class="current-time"></div>
+    <div id="map"></div>
+
+    <div id="dashboard">
+        <h2>TW IoT PM2.5</h2>
+        
+        <div class="filter-controls">
+            <label for="city-select">選擇縣市:</label>
+            <select id="city-select"><option value="所有">載入中...</option></select>
+        </div>
+
+        <div class="filter-controls">
+            <label for="quality-select">品質等級:</label>
+            <select id="quality-select">
+                <option value="所有">所有</option>
+                <option value="良好">良好</option>
+                <option value="普通">普通</option>
+                <option value="不良">不良</option>
+                <option value="非常不良">非常不良</option>
+                <option value="危害">危害</option>
+            </select>
+        </div>
+
+        <div class="filter-controls">
+            <label for="station-id-filter">搜尋測站 ID:</label>
+            <input type="text" id="station-id-filter" placeholder="輸入 ID 關鍵字...">
+        </div>
+        
+        <div class="load-controls">
+            <button id="locate-me">📍 定位</button>
+            <button id="auto-load">🔄 自動更新: 關</button>
+            <button id="load-more">更多資料</button>
+            <button id="show-chart">統計圖</button>
+        </div>
+
+        <hr>
+        <div id="station-info"><p>正在獲取感測器數據...</p></div>
+        <div id="error-message" class="error-message"></div>
+
+        <div id="chart-container">
+            <div id="chart-close">✖ 關閉</div>
+            <div style="height: 300px;"><canvas id="station-chart"></canvas></div>
+        </div>
     </div>
 
-    <div id="station-info"></div>
-    <div id="error-message" class="error-message"></div>
-
-    <div id="chart-container">
-        <div id="chart-close">✖</div>
-        <canvas id="station-chart" width="400" height="200"></canvas>
+    <div class="legend">
+        <h4>PM2.5 指標 <span id="legend-toggle" style="cursor:pointer; color:blue;">(隱藏)</span></h4>
+        <div id="legend-content">
+            <div style="color: green;">● 良好 (0-35)</div>
+            <div style="color: #cccc00;">● 普通 (36-75)</div>
+            <div style="color: orange;">● 不良 (76-150)</div>
+            <div style="color: red;">● 非常不良 (151-250)</div>
+            <div style="color: purple;">● 危害 (>250)</div>
+        </div>
     </div>
-</div>
 
-<div class="legend" id="legend-container">
-    <h4>PM2.5 空品健康等級 <span id="legend-toggle">(隱藏)</span></h4>
-    <div style="color: green;">良好 (0 - 35 µg/m³)</div>
-    <div style="color: yellow;">普通 (36 - 75 µg/m³)</div>
-    <div style="color: orange;">不良 (76 - 150 µg/m³)</div>
-    <div style="color: red;">非常不良 (151 - 250 µg/m³)</div>
-    <div style="color: purple;">危害 (251 µg/m³ 以上)</div>
-</div>
-
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-<script src="scripts.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="scripts.js"></script>
 </body>
 </html>
