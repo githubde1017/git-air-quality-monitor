@@ -2,63 +2,87 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 TWIoT 高效能監測系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TWIoT PM2.5 v3.2.0</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div id="countdown-timer" class="countdown-timer"></div>
-
-    <div id="modal" class="modal" style="display:block;">
-        <button class="close-btn" id="modal-close-btn">進入系統 ×</button>
+    <div id="modal" class="modal-overlay">
         <canvas id="fireworks-canvas"></canvas>
-        <div class="happy-new-year">
+        <button class="close-btn" onclick="closeStartModal()">進入監控系統 ×</button>
+        <div class="happy-new-year-content">
             <div class="brand-text">TWIoT PM2.5</div>
-            <div class="year-text">2026</div>
-            <div class="wish-text">Happy New Year</div>
+            <div id="dynamic-greeting" class="wish-text">2026 系統啟動中</div>
         </div>
     </div>
     
-    <div id="map"></div>
-
-    <div class="map-overlay-legend">
-        <h4>PM2.5 指標</h4>
-        <div class="legend-item"><span class="dot green"></span> 良好 (0-35)</div>
-        <div class="legend-item"><span class="dot yellow"></span> 普通 (36-75)</div>
-        <div class="legend-item"><span class="dot orange"></span> 不良 (76-150)</div>
-        <div class="legend-item"><span class="dot red"></span> 危害 (151+)</div>
-        <div class="legend-item"><span class="dot gray"></span> 異常/維修</div>
+    <div id="map-container">
+        <div id="countdown-timer" class="map-floating-timer"></div>
+        <div id="map"></div>
+        <div id="legend-window" class="map-floating-legend">
+            <div class="legend-header" id="legend-trigger"><span>指標圖例</span> <span>▼</span></div>
+            <div id="legend-body">
+                <div class="legend-item"><span class="dot green"></span> 良好 (0-35)</div>
+                <div class="legend-item"><span class="dot yellow"></span> 普通 (36-75)</div>
+                <div class="legend-item"><span class="dot orange"></span> 不良 (76-150)</div>
+                <div class="legend-item"><span class="dot red"></span> 危害 (151+)</div>
+                <div class="legend-item"><span class="dot gray"></span> 異常/離線</div>
+            </div>
+        </div>
     </div>
 
     <div id="dashboard">
-        <div id="side-clock" class="side-clock">載入時間...</div>
-        <h2>數據控制台</h2>
-        
-        <div class="control-group">
-            <label>縣市快速篩選</label>
-            <select id="city-select"><option value="所有">連線中...</option></select>
-        </div>
-
-        <div class="btn-row">
-            <button id="locate-btn" class="btn-blue-outline">📍 我的位置</button>
-            <button id="refresh-now-btn" class="btn-gray">⚡ 更新</button>
-        </div>
-
-        <div class="btn-row" style="margin-top:10px;">
-            <button id="auto-update-btn" class="btn-green">🔄 自動更新：關</button>
-            <button id="show-chart" class="btn-blue">📊 統計分析</button>
+        <div class="side-clock">
+            <div id="side-time">--:--:--</div>
+            <div id="lunar-info">農曆計算中...</div>
         </div>
         
-        <hr>
-        <div id="station-status-summary" style="font-weight:bold; color:#007bff;">系統啟動中...</div>
+        <div class="control-panel">
+            <div class="sync-toggle-group">
+                <div class="sync-toggle-box">
+                    <label class="switch"><input type="checkbox" id="auto-play-check" checked><span class="slider"></span></label>
+                    <span id="play-status">系統待命</span>
+                </div>
+            </div>
+            
+            <div class="filter-row">
+                <div class="control-group">
+                    <label>縣市篩選</label>
+                    <select id="city-select"><option value="所有">所有縣市</option></select>
+                </div>
+                <div class="control-group">
+                    <label>品質過濾</label>
+                    <select id="quality-select">
+                        <option value="所有">所有等級</option>
+                        <option value="良好">良好</option>
+                        <option value="普通">普通</option>
+                        <option value="不良">不良</option>
+                        <option value="危害">危害</option>
+                        <option value="異常">異常</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-grid">
+                <button id="locate-btn" class="btn-locate">📍 定位</button>
+                <button id="show-chart-btn" class="btn-chart">📊 統計</button>
+                <button id="refresh-now-btn" class="btn-refresh">⚡ 更新</button>
+            </div>
+            
+            <div id="station-status-summary" class="status-console">系統初始化完成，準備連線...</div>
+        </div>
         <div id="station-info-list" class="station-list"></div>
+    </div>
 
-        <div id="chart-container">
-            <div id="chart-close">✖ 關閉</div>
-            <h3 style="text-align:center;">品質分佈對數圖</h3>
-            <div style="height: 300px;"><canvas id="station-chart"></canvas></div>
+    <div id="chart-floating-window" class="floating-window" style="display:none;">
+        <div class="window-header">
+            <span>📊 全台分佈 (點長條篩選 / 點白處重置)</span>
+            <div id="chart-close" class="close-x">×</div>
+        </div>
+        <div class="window-content" style="height: 300px;">
+            <canvas id="station-chart"></canvas>
         </div>
     </div>
 
